@@ -110,8 +110,8 @@ export function ProfileForm() {
                   </FormField>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <FormField label="Year started (optional)" htmlFor="year_started" error={errors.year_started?.message}>
-                    <Input id="year_started" type="number" {...register("year_started")} />
+                  <FormField label="Year started" htmlFor="year_started" error={errors.year_started?.message}>
+                    <Input id="year_started" type="number" {...register("year_started", { required: "Required" })} />
                   </FormField>
                   <FormField label="Year completed" htmlFor="year_completed" error={errors.year_completed?.message}>
                     <Input id="year_completed" type="number" {...register("year_completed", { required: "Required" })} />

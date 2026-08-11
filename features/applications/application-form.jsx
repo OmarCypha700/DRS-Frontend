@@ -140,12 +140,12 @@ export function ApplicationForm({ mode = "create", application }) {
     }
 
     // These are the details needed to actually retrieve the document —
-    // required for every application, self or third-party. Year started
-    // stays optional.
+    // required for every application, self or third-party.
     const errors = {};
     if (!payload.subject_full_name) errors.full_name = "Required.";
     if (!payload.subject_index_number) errors.index_number = "Required.";
     if (!payload.subject_program) errors.program = "Required.";
+    if (!payload.subject_year_started) errors.year_started = "Required.";
     if (!payload.subject_year_completed) errors.year_completed = "Required.";
     if (!payload.subject_phone) errors.phone = "Required.";
     if (!payload.subject_address) errors.address = "Required.";
@@ -230,7 +230,7 @@ export function ApplicationForm({ mode = "create", application }) {
                 />
               </FormField>
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="Year started (optional)" htmlFor="subject_year_started">
+                <FormField label="Year started" htmlFor="subject_year_started" error={subjectErrors.year_started}>
                   <Input
                     id="subject_year_started"
                     type="number"
