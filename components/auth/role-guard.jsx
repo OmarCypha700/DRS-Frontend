@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { LoadingState } from "@/components/shared";
 import { ROLES } from "@/lib/constants";
@@ -22,19 +22,24 @@ const HOME_BY_ROLE = {
 export function RoleGuard({ role, children }) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   const isAuthorized = !isLoading && user && user.role === role;
 
   useEffect(() => {
     if (isLoading) return;
     if (!user) {
-      router.replace("/login");
+      // Preserve where they were headed — LoginForm already reads `next`
+      // and sends them back here on success instead of dumping them on
+      // their role's dashboard, this is just the only place that was ever
+      // setting it.
+      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
       return;
     }
     if (user.role !== role) {
       router.replace(HOME_BY_ROLE[user.role] ?? "/login");
     }
-  }, [isLoading, user, role, router]);
+  }, [isLoading, user, role, router, pathname]);
 
   if (!isAuthorized) {
     return <LoadingState message="Checking your session…" />;
