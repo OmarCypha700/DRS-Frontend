@@ -9,15 +9,27 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Guards against a stale result clobbering a newer one — e.g. the
-  // bootstrap effect's /auth/me check is still in flight (two sequential
-  // round trips: csrf, then me) when the user submits login, which resolves
-  // first. Without this, the bootstrap check's "not logged in" result can
-  // land after login's "logged in" result and silently overwrite it back to
-  // null — login appears to succeed, the page navigates to the dashboard,
-  // then the user gets bounced right back to /login. Every setter of `user`
-  // bumps this ref first and stamps its own call, so a result only applies
-  // if it's still the most recent thing that was asked for.
+  // Two layers, because a slow backend (PythonAnywhere in particular) makes
+  // both timing windows realistic, not just theoretical:
+  //
+  // 1. authSettledByUserActionRef — an explicit login/register is a more
+  //    authoritative, more recent signal of truth than the passive boot-time
+  //    session check below, full stop. Once it's happened, that background
+  //    check must never be allowed to start applying its own result at all
+  //    — not "only if it's not stale", but not at all. Without this: the
+  //    bootstrap effect does two sequential round trips (csrf, then me); if
+  //    login finishes *during* that first await, the effect would still go
+  //    on to fire its own fresh /auth/me check afterward, and that check can
+  //    fail for reasons that have nothing to do with whether login just
+  //    succeeded — silently overwriting the logged-in state back to null.
+  //    The user sees "Redirecting…" forever: `user` flips to null right as
+  //    the redirect effect was about to fire off the back of it.
+  // 2. requestIdRef — covers the narrower window where the bootstrap's own
+  //    /auth/me call had *already gone out* right before login completed,
+  //    so layer 1's check ran too early to catch it. Every setter of `user`
+  //    bumps this first and stamps its own call, so a result only applies
+  //    if it's still the most recent thing that was asked for.
+  const authSettledByUserActionRef = useRef(false);
   const requestIdRef = useRef(0);
 
   const refetch = useCallback(async () => {
@@ -35,13 +47,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     (async () => {
       await authApi.bootstrapCsrf().catch(() => {});
-      await refetch();
+      if (!authSettledByUserActionRef.current) {
+        await refetch();
+      }
       setIsLoading(false);
     })();
   }, [refetch]);
 
   const login = useCallback(async (credentials) => {
     const { data } = await authApi.login(credentials);
+    authSettledByUserActionRef.current = true;
     requestIdRef.current++;
     setUser(data.user);
     return data.user;
@@ -49,6 +64,7 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const { data } = await authApi.register(payload);
+    authSettledByUserActionRef.current = true;
     requestIdRef.current++;
     setUser(data.user);
     return data.user;
@@ -56,6 +72,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     await authApi.logout().catch(() => {});
+    authSettledByUserActionRef.current = true;
     requestIdRef.current++;
     setUser(null);
   }, []);

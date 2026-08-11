@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import { getApiErrorMessage } from "@/lib/api";
 
 export function RegisterForm() {
   const { register: registerUser } = useAuth();
-  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -23,9 +21,10 @@ export function RegisterForm() {
 
   const onSubmit = async (values) => {
     try {
+      // No redirect here — see the matching comment in login-form.jsx.
+      // GuestGuard (wrapping this page) owns the post-auth redirect.
       await registerUser(values);
       toast.success("Account created — welcome!");
-      router.push("/dashboard");
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Could not create your account."));
     }

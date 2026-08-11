@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -10,17 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField } from "@/components/shared";
 import { useAuth } from "@/lib/auth/auth-context";
 import { getApiErrorMessage } from "@/lib/api";
-import { ROLES } from "@/lib/constants";
-
-const HOME_BY_ROLE = {
-  [ROLES.APPLICANT]: "/dashboard",
-  [ROLES.REGISTRY_OFFICER]: "/registry/dashboard",
-};
 
 export function LoginForm() {
   const { login } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     register,
     handleSubmit,
@@ -29,8 +20,13 @@ export function LoginForm() {
 
   const onSubmit = async (values) => {
     try {
-      const user = await login(values);
-      router.push(searchParams.get("next") || HOME_BY_ROLE[user.role] || "/");
+      // No redirect here — this page is wrapped in GuestGuard, which reacts
+      // to `user` becoming truthy and handles the post-login redirect (incl.
+      // `next`) on its own. Having both this and GuestGuard independently
+      // navigate off the same login was the actual bug: two competing
+      // router calls firing off the same state change, which production's
+      // navigation scheduling handled by just... never completing either.
+      await login(values);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Invalid email or password."));
     }
