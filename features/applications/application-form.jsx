@@ -17,6 +17,28 @@ import { useAuth } from "@/lib/auth/auth-context";
 
 const REQUEST_FOR = { SELF: "self", OTHER: "other" };
 
+const EMPTY_SUBJECT = {
+  full_name: "",
+  index_number: "",
+  program: "",
+  year_started: "",
+  year_completed: "",
+  phone: "",
+  address: "",
+};
+
+function shapeProfileSubject(data) {
+  return {
+    full_name: data.full_name || "",
+    index_number: data.profile?.index_number || "",
+    program: data.profile?.program || "",
+    year_started: data.profile?.year_started || "",
+    year_completed: data.profile?.year_completed || "",
+    phone: data.phone || "",
+    address: data.profile?.address || "",
+  };
+}
+
 function initialQuantities(items) {
   const map = {};
   for (const item of items ?? []) {
@@ -47,6 +69,7 @@ export function ApplicationForm({ mode = "create", application }) {
     phone: application?.subject_phone ?? "",
     address: application?.subject_address ?? "",
   });
+  const [profileSubject, setProfileSubject] = useState(null);
   const [subjectErrors, setSubjectErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -75,14 +98,16 @@ export function ApplicationForm({ mode = "create", application }) {
     (async () => {
       try {
         const { data } = await profileApi.get();
+        const shaped = shapeProfileSubject(data);
+        setProfileSubject(shaped);
         setSubject((prev) => ({
-          full_name: prev.full_name || data.full_name || "",
-          index_number: prev.index_number || data.profile?.index_number || "",
-          program: prev.program || data.profile?.program || "",
-          year_started: prev.year_started || data.profile?.year_started || "",
-          year_completed: prev.year_completed || data.profile?.year_completed || "",
-          phone: prev.phone || data.phone || "",
-          address: prev.address || data.profile?.address || "",
+          full_name: prev.full_name || shaped.full_name,
+          index_number: prev.index_number || shaped.index_number,
+          program: prev.program || shaped.program,
+          year_started: prev.year_started || shaped.year_started,
+          year_completed: prev.year_completed || shaped.year_completed,
+          phone: prev.phone || shaped.phone,
+          address: prev.address || shaped.address,
         }));
       } catch {
         // Prefill is a convenience — if it fails the applicant can still
@@ -91,6 +116,28 @@ export function ApplicationForm({ mode = "create", application }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
+
+  const handleRequestForChange = async (value) => {
+    setRequestFor(value);
+    setSubjectErrors({});
+    if (value === REQUEST_FOR.OTHER) {
+      setSubject(EMPTY_SUBJECT);
+      return;
+    }
+    if (profileSubject) {
+      setSubject(profileSubject);
+      return;
+    }
+    try {
+      const { data } = await profileApi.get();
+      const shaped = shapeProfileSubject(data);
+      setProfileSubject(shaped);
+      setSubject(shaped);
+    } catch {
+      // Prefill is a convenience — if it fails the applicant can still fill
+      // these in by hand.
+    }
+  };
 
   useEffect(() => {
     if (mode === "create" && user?.profile_complete === false) {
@@ -192,7 +239,7 @@ export function ApplicationForm({ mode = "create", application }) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <RadioGroup value={requestFor} onValueChange={setRequestFor} className="gap-3">
+            <RadioGroup value={requestFor} onValueChange={handleRequestForChange} className="gap-3">
               <div className="flex items-center gap-2">
                 <RadioGroupItem value={REQUEST_FOR.SELF} id="request-for-self" />
                 <Label htmlFor="request-for-self" className="font-normal">

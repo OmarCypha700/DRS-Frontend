@@ -1,14 +1,13 @@
 /**
- * Placeholder app icon — a simple document glyph on the app's dark neutral
- * primary color, rendered via `next/og`'s ImageResponse (satori). Swap this
- * out for real brand assets later; the manifest/icon routes that consume it
- * won't need to change shape, just what they render.
+ * App icon — the D-monogram mark on a rounded, filled tile, rendered via
+ * `next/og`'s ImageResponse (satori) for every icon size the manifest and
+ * `<head>` metadata need. `maskable` shrinks the mark so an OS-imposed
+ * circular/rounded mask (Android adaptive icons) doesn't clip it.
  */
 export function AppIconGlyph({ size, maskable = false }) {
-  const scale = maskable ? 0.62 : 1;
-  const docWidth = Math.round(size * 0.34 * scale);
-  const docHeight = Math.round(size * 0.44 * scale);
-  const lineHeight = Math.max(2, Math.round(size * 0.018 * scale));
+  const markSize = Math.round(size * (maskable ? 0.5 : 0.72));
+  const strokeWidth = size <= 40 ? 4.5 : size <= 200 ? 4 : 3.5;
+  const tickWidth = strokeWidth * 0.85;
 
   return (
     <div
@@ -21,38 +20,23 @@ export function AppIconGlyph({ size, maskable = false }) {
         background: "#18181b",
       }}
     >
-      <div
-        style={{
-          width: docWidth,
-          height: docHeight,
-          background: "#ffffff",
-          borderRadius: Math.max(1, Math.round(size * 0.02)),
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            width: "60%",
-            height: lineHeight,
-            background: "#a1a1aa",
-            borderRadius: lineHeight,
-            marginBottom: lineHeight,
-          }}
+      <svg width={markSize} height={markSize} viewBox="0 0 56 56">
+        <path
+          d="M16,46 V10 H26 Q40,10 40,28 Q40,46 26,46 Z"
+          fill="none"
+          stroke="#fafafa"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
-        <div
-          style={{
-            width: "60%",
-            height: lineHeight,
-            background: "#a1a1aa",
-            borderRadius: lineHeight,
-            marginBottom: lineHeight,
-          }}
+        <path
+          d="M22,19 H30 M22,28 H35 M22,37 H30"
+          fill="none"
+          stroke="#fafafa"
+          strokeWidth={tickWidth}
+          strokeLinecap="round"
         />
-        <div style={{ width: "40%", height: lineHeight, background: "#a1a1aa", borderRadius: lineHeight }} />
-      </div>
+      </svg>
     </div>
   );
 }

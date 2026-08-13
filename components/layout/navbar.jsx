@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { FileText } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { Logo } from "@/components/layout/logo";
 
 export function Navbar({ actions, sidebarItems, mobileNav = "drawer" }) {
   return (
@@ -9,9 +9,8 @@ export function Navbar({ actions, sidebarItems, mobileNav = "drawer" }) {
       <div className="flex h-14 items-center justify-between gap-2 px-4 lg:px-6">
         <div className="flex min-w-0 items-center gap-2">
           {sidebarItems && mobileNav === "drawer" && <MobileNav items={sidebarItems} />}
-          <Link href="/" className="flex min-w-0 items-center gap-2 font-semibold">
-            <FileText className="size-5 shrink-0 text-primary" />
-            <span className="hidden truncate sm:inline">Document Request System</span>
+          <Link href="/" className="min-w-0">
+            <Logo />
           </Link>
         </div>
         <div className="flex shrink-0 items-center gap-2">

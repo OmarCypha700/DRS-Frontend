@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,12 +21,6 @@ export function LoginForm() {
 
   const onSubmit = async (values) => {
     try {
-      // No redirect here — this page is wrapped in GuestGuard, which reacts
-      // to `user` becoming truthy and handles the post-login redirect (incl.
-      // `next`) on its own. Having both this and GuestGuard independently
-      // navigate off the same login was the actual bug: two competing
-      // router calls firing off the same state change, which production's
-      // navigation scheduling handled by just... never completing either.
       await login(values);
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Invalid email or password."));
@@ -34,6 +29,9 @@ export function LoginForm() {
 
   return (
     <Card>
+      <div className="flex justify-center mt-4">
+      <Image src="/tanoso.webp" alt="Logo" width={100} height={100} />
+      </div>
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>Enter your credentials to access your account.</CardDescription>
